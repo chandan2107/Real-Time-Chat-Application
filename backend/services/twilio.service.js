@@ -28,7 +28,7 @@ const sendOtpToPhone = async (phoneNumber) => {
 }
 
 //verify
-const verifyOtp = async (phoneNumber, otp) => {
+const verifyOtpPhone = async (phoneNumber, otp) => {
     try{
         console.log("This is my OTP ",otp)
         console.log("Verifying OTP for phone number:", phoneNumber);
@@ -46,5 +46,5 @@ const verifyOtp = async (phoneNumber, otp) => {
 }
 
 
-export { sendOtpToPhone, verifyOtp };
+export { sendOtpToPhone, verifyOtpPhone };
 
