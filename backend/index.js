@@ -23,7 +23,7 @@ connectDB()
 
 
 //routes
-app.use("/api/auth",authRouterouter)
+app.use("/api/auth",authRouter)
 
 
 

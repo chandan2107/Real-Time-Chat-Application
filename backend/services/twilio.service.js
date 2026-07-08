@@ -22,7 +22,7 @@ const sendOtpToPhone = async (phoneNumber) => {
         return response
 
     } catch (error) {
-        throw new Error("Error sending OTP:", error);
+        throw new Error( error);
 
     }
 }

@@ -1,5 +1,6 @@
 
 
+import { uploadFileToCloudinary } from "../config/cloudinaryConfig.js";
 import { User } from "../models/user.model.js";
 import { sendOtpToEmail } from "../services/email.service.js";
 import { sendOtpToPhone } from "../services/twilio.service.js";
@@ -62,7 +63,7 @@ const verifyOtp = async (req, res) => {
             }
 
             const now =new Date()
-            if(!emailOtp || String(user.emailOtp) !== String(otp) || now>new Date(user.emailOtpExpiry)){
+            if(!user.emailOtp || String(user.emailOtp) !== String(otp) || now>new Date(user.emailOtpExpiry)){
                 return response(res,400,"Invalid or expired OTP")
             }
             user.isVerified=true
@@ -111,5 +112,33 @@ const verifyOtp = async (req, res) => {
     }
 }
 
-export {sendOtp,verifyOtp}
+
+//setup the profile image and username
+const updateProfile = async (req,res)=>{
+    const {username,agreed,about}=req.body
+    const {userId}=req.user.userId
+    try {
+        const user=await User.findOne({userId})
+        const file = req.file
+        if(file){
+            const uploadResult=await uploadFileToCloudinary(file)
+            console.log(uploadResult)
+            user.profilePicture=uploadResult?.secure_url
+        }
+        else if(req.body.profilePicture){
+            user.profilePicture=req.body.profilePicture
+        }
+
+        if(username){ user.username=username }
+        if(agreed){ user.agreed=agreed}
+        if(about){ user.about = about}
+
+        return response(res,200,"user profile updated sucessfully",user)
+    } catch (error) {
+        console.error(error);
+        return response(res,500,"Internal server error")
+    }
+}
+
+export {sendOtp,verifyOtp,updateProfile}
 

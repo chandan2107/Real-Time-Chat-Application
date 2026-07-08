@@ -21,28 +21,47 @@ transporter.verify((error, success) => {
 });
 
 export const sendOtpToEmail = async (email, otp) => {
-    const html=`
-    <div style="font-family: Arial, sans-serif; color: #333; line-height: 1.6;">
-      <h2 style="color: #075e54;">🔐 WhatsApp Web Verification</h2>
-      
-      <p>Hi there,</p>
-      
-      <p>Your one-time password (OTP) to verify your WhatsApp Web account is:</p>
-      
-      <h1 style="background: #e0f7fa; color: #000; padding: 10px 20px; display: inline-block; border-radius: 5px; letter-spacing: 2px;">
-        ${otp}
-      </h1>
+    const html = `
+<div style="font-family: Arial, Helvetica, sans-serif; background:#f5f5f5; padding:40px 20px;">
+  <div style="max-width:500px; margin:auto; background:#ffffff; border-radius:10px; padding:35px; text-align:center;">
 
-      <p><strong>This OTP is valid for the next 5 minutes.</strong> Please do not share this code with anyone.</p>
+    <h2 style="color:#25D366; margin-bottom:10px;">
+      Chat Application using Socket.io
+    </h2>
 
-      <p>If you didn’t request this OTP, please ignore this email.</p>
+    <p style="color:#555; font-size:15px;">
+      Use the OTP below to verify your account.
+    </p>
 
-      <p style="margin-top: 20px;">Thanks & Regards,<br/>WhatsApp Web Security Team</p>
+    <div style="
+      display:inline-block;
+      margin:25px 0;
+      padding:15px 30px;
+      background:#f0fff4;
+      border:1px solid #25D366;
+      border-radius:8px;
+      font-size:32px;
+      font-weight:bold;
+      letter-spacing:6px;
+      color:#128C7E;
+    ">
+      ${otp}
+    </div>
 
-      <hr style="margin: 30px 0;" />
+    <p style="color:#666; font-size:14px;">
+      This OTP is valid for <strong>5 minutes</strong>.
+    </p>
 
-      <small style="color: #777;">This is an automated message. Please do not reply.</small>
-    </div>`
+    <p style="color:#999; font-size:13px; margin-top:25px;">
+      If you didn't request this OTP, you can safely ignore this email.
+    </p>
+    <p style="color:#999; font-size:13px; margin-top:18px;">
+        \u00A92026 Chandan Naik 
+    </p>
+
+  </div>
+</div>
+`;
 
     await transporter.sendMail({
         from: `Real-Time Chat App <${process.env.EMAIL_USER}>` ,
