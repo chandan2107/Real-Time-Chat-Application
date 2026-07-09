@@ -11,21 +11,29 @@ cloudinary.config({
 });
 
 
-const uploadFileToCloudinary=(file)=>{
+const uploadFileToCloudinary= async (file)=>{
+    if (!file) {
+        throw new Error("No file provided");
+    }
     const options={
         resource_type:file.mimetype.startsWith("video")? "video":"image"
     }
 
-    return new Promise((resolve,reject)=>{
-        const uploader=file.mimetype.startsWith("video") ? cloudinary.uploader.upload_large : cloudinary.uploader.upload;
-        uploader(file.path,options,(error,result)=>{
-            fs.unlink(file.path,()=>{})
-            if(error){
-                return reject(error)
-            }
-            resolve(result)
-        })
-    })
+    try {
+        const uploader = file.mimetype.startsWith("video")
+            ? cloudinary.uploader.upload_large
+            : cloudinary.uploader.upload;
+
+        const result = await uploader(file.path, options);
+
+        return result;
+    } finally {
+        
+        fs.unlink(file.path, () => {});
+    }
+
+
+    
 }
 
 
