@@ -19,7 +19,7 @@ const messageSchema = new mongoose.Schema({
         required:true
     },
     content:{type:String},
-    imageOrVedio:{type:String},
+    imageOrVedioUrl:{type:String},
     contentType:{type:String,enum:["image","vedio","text"]},
     reactions:[
         {
