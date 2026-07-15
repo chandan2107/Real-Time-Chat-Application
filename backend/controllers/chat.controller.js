@@ -14,8 +14,8 @@ const sendMessage=async (req,res)=>{
         const participants=[senderId,receiverId].sort()
 
         //check if conversation already exists 
-        const conversation=await Conversation.findOne({
-            partitipants:participants
+        let conversation=await Conversation.findOne({
+            participants:participants
         })
         if(!conversation){
             conversation =new Conversation({
@@ -87,10 +87,10 @@ const sendMessage=async (req,res)=>{
 //get all conversation
 
 const getConversation=async (req,res)=>{
-    const userid=req.user.userId
+    const userId=req.user.userId
     try {
         const conversation=await Conversation.find({
-            partitipants:userId
+            participants:userId
         }).populate('participants',"username profilePicture isOnline lastSeen")
         .populate({
             path:"lastMessage",
@@ -119,7 +119,7 @@ const getMessages=async (req,res)=>{
         if(!conversation){
             return response(res,404,"conversation not found")
         }
-        if(!conversation.participants.include(userId)){
+        if(!conversation.participants.includes(userId)){
             return response(res,404,"Not authorized to view this conversation")
         }
 
@@ -153,16 +153,16 @@ const getMessages=async (req,res)=>{
 
 const markAsRead=async (req,res)=>{
     const {messageIds}=req.body
-    const userId=req.user.userid
+    const userId=req.user.userId
     try {
-        let messages=Message.find({
+        let messages=await Message.find({
             _id:{
                 $in :messageIds
             },
             receiver:userId
         })
 
-        await messages.updateMany(
+        await Message.updateMany(
             {_id:{$in:messageIds},receiver:userId},
             {$set:{messageStatus:"read"}}
         )
@@ -176,7 +176,7 @@ const markAsRead=async (req,res)=>{
 
 const deleteMessage=async (req,res)=>{
     const {messageId}=req.params
-    const userId=req.user.userid
+    const userId=req.user.userId
     try {
         const message=await Message.findById(messageId)
         if(!message){
