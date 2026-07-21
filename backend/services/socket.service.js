@@ -10,7 +10,7 @@ const onlineUsers=new Map()
 
 const typingUsers=new Map()
 
-const initializeServer=(server)=>{
+const initializeSocket=(server)=>{
     const io=new Server(server,{
         cors:{
             origin:process.env.FRONTEND_URL,
@@ -23,7 +23,7 @@ const initializeServer=(server)=>{
 
 
 
-
+    //when new connection is establlished
     io.on("connection",(socket)=>{
         console.log(`User connected eith socket ID: ${socket.id}`)
         let userId=null
@@ -162,6 +162,106 @@ const initializeServer=(server)=>{
             
         })
 
+        //Add or update reaction
+        socket.on("add_reaction",async ({messageId,emoji,userId,reactionUserId})=>{
+            try {
+                const message=await Message.findById(messageId)
+                if(!message){
+                    return;
+                }
+                const existingIndex=message.reactions.findIndex(
+                    (r)=>{
+                        r.user.toString() === reactionUserId
+                    }
+                )
+
+                if(existingIndex > -1){
+                    const existing=message.reactions(existingIndex)
+                    if(existing.emoji===emoji){
+                        //remove same reaction
+                        message.reactions.splice(existingIndex,1)
+                    }
+                    else{
+                        //change emoji
+                        message.reactions[existingIndex].emoji=emoji
+                    }
+                }
+                else{
+                    //add new reaction
+                    message.reactions.push({user:reactionUserId,emoji})
+                }
+                await message.save()
+
+                const populatedMessage=await Message.findOne(message?._id)
+                .populate("sender","username profilePicture")
+                .populate("receiver","username profilePicture")
+                .populate("reactions.user","username")
+
+                const reactionUpdated={
+                    messageId,
+                    reactions:populatedMessage.reactions
+                }
+
+                const senderSocket=onlineUsers.get(populatedMessage.sender?._id.toString())
+                const receiverSocket=onlineUsers.get(populatedMessage.receiver?._id.toString())
+
+                if(senderSocket){
+                    io.to(senderSocket).emit("reaction_update",reactionUpdated)
+                }
+                if(receiverSocket){
+                    io.to(receiverSocket).emit("reaction_update",reactionUpdated)
+                }
+            } catch (error) {
+                console.error("Error handling reactions",error)
+            }
+        })
+
+    //handle disconnection and mark user offline
+
+    const handleDisconnected=async (req,res)=>{
+        if(!userId) return;
+
+        try {
+            onlineUsers.delete(userId)
+
+            //clear all typing timeouts
+            if(typingUsers.has(userId)){
+                const userTyping=typingUsers.get(userId)
+                Object.keys(userTyping).forEach((key)=>{
+                    if(key.endsWith("_timeout")){
+                        clearTimeout(userTyping[key])
+                    }
+                })
+                typingUsers.delete(userId)
+            }
+            await User.findByIdAndUpdate({
+                isOnline:false,
+                lastSeen:new Date()
+            })
+
+            io.emit("user_status",{
+                userId,
+                isOnline:false,
+                lastSeen:new Date()
+            })
+
+            socket.leave(userid),
+            console.log(`user ${userId} is disconnected`)
+
+        } catch (error) {
+            console.error("Error handling disconnection",error)
+        }
+    }
+
+    //disconnect event
+    socket.on("disconnect",handleDisconnected)
 
     })
+
+    //attach online usermap to socket server for external user
+    io.socketUserMap=onlineUsers
+    return io
+
 }
+
+export {initializeSocket}

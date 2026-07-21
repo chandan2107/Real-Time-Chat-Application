@@ -43,13 +43,24 @@ const createStatus=async (req,res)=>{
         const status=new Status({
             user:userId,
             content:mediaUrl || content,
-            contentType:finalContentType
+            contentType:finalContentType,
+            expiresAt
         })
         await status.save()
 
         const populatedStatus=await Status.findOne(status?._id)
         .populate("user","username profilePicture")
         .populate("viewers","username profilePicture")
+
+        //emit socket event
+        if(req.io && req.socketUserMap){
+            //broadcast to all users except creator
+            for(const [connectedUserId,socketId] of req.socketUsermap){
+                if(connectedUserId !==userId){
+                    req.io.to(socketId).emit("new_status",populatedStatus)
+                }
+            }
+        }
 
         return response(res,200,"Status created successfully",populatedStatus)
         
@@ -84,10 +95,10 @@ const getStatus=async (req,res)=>{
 //users who viewed the status
 
 const viewStatus=async (req,res)=>{
-    const {ststusId}=req.params
+    const {statusId}=req.params
     const userId=req.user.userId
     try {
-        const status = await Conversation.findById(statusId)
+        const status = await Status.findById(statusId)
         if(!status){
             return response(res,404,"Status not found")
         }
@@ -104,7 +115,7 @@ const viewStatus=async (req,res)=>{
         }
 
         
-        return response(res,200,"Status retrieved successfully",messages)
+        return response(res,200,"Status viewed successfully")
 
     } catch (error) {
         console.error(error)
