@@ -71,9 +71,16 @@ const sendMessage=async (req,res)=>{
         .populate("sender","username profilePicture")
         .populate("receiver","username profilePicture")
 
+        //socket event for real time chat
+        if(req.io && req.socketUserMap){
+            const receiverSocketId=req.socketUserMap.get(receiverId)
+            if(receiverSocketId){
+                req.io.to(receiverSocketId).emit("receive_message",populatedMessage)
+                message.messageStatus="delivered"
+                await message.save()
 
-
-
+            }
+        }
 
         return response(res,200,"Message content sent successfully",populatedMessage)
         
@@ -167,6 +174,22 @@ const markAsRead=async (req,res)=>{
             {$set:{messageStatus:"read"}}
         )
 
+        //socket event to notify sender that msg is mark as read
+        if(req.io && req.socketUserMap){
+            for(const message of messages){
+                const senderSocketId=req.socketUserMap.get(message.sender._id.toString())
+                if(senderSocketId){
+                    const updatedMessage={
+                        _id:message._id,
+                        messageStatus:"read"
+                    }
+                    req.io.send(senderSocketId).emit("message_read",updatedMessage)
+                    await message.save()
+                }
+            }
+        }
+        
+
         return response(res,200,"Message marked as read",messages)
     } catch (error) {
         console.error(error)
@@ -186,6 +209,15 @@ const deleteMessage=async (req,res)=>{
             return response(res,403,"Not authorized to delete this message")
         }
         await message.deleteOne()
+
+        //socket event for deleting message
+        if(req.io && req.socketUserMap){
+            const receiverSocketId=req.socketUserMap.get(message.receiver._id.toString())
+            if(receiverSocketId){
+                req.io.to(receiverSocketId).emit("message_deleted",messageId)
+            }
+
+        }
 
         return response(res,200,"Message deleted successfully")
     } catch (error) {

@@ -55,7 +55,7 @@ const createStatus=async (req,res)=>{
         //emit socket event
         if(req.io && req.socketUserMap){
             //broadcast to all users except creator
-            for(const [connectedUserId,socketId] of req.socketUsermap){
+            for(const [connectedUserId,socketId] of req.socketUserMap){
                 if(connectedUserId !==userId){
                     req.io.to(socketId).emit("new_status",populatedStatus)
                 }
@@ -109,7 +109,28 @@ const viewStatus=async (req,res)=>{
             const updateStatus=await Status.findById(statusId)
             .populate("user","username profilePicture")
             .populate("viewers","username profilePicture")
+
+            //emit socket event
+            if(req.io && req.socketUserMap){
+                //alert the user about status viewed
+                const statusOwnerSocketId=req.socketUserMap.get(status.user._id.toString())
+                if(statusOwnerSocketId){
+                    const viewData={
+                        statusId,
+                        viewerId:userId,
+                        totalViewers:updateStatus.viewers.length,
+                        viewers:updateStatus.viewers
+                    }
+                    
+                    res.io.to(statusOwnerSocketId).emit("status_viewed",viewData)
+                }
+                else{
+                    console.log("Status owner not connected")
+                }
+            
         }
+        }
+
         else{
             console.log("User already viewed the status")
         }
@@ -136,6 +157,16 @@ const deleteStatus=async (req,res)=>{
             return response(res,403,"Not authorized to delete this status")
         }
         await status.deleteOne()
+
+        //socket event
+        if(req.io && req.socketUserMap){
+            
+            for(const [connectedUserId,socketId] of req.socketUserMap){
+                if(connectedUserId !==userId){
+                    req.io.to(socketId).emit("status_deleted",statusId)
+                }
+            }
+        }
 
         return response(res,200,"Status deleted successfully")
     } catch (error) {
