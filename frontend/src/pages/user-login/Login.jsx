@@ -2,20 +2,27 @@ import React, { useState } from 'react'
 import { useLoginStore } from '../../store/useLoginStore'
 import { countries } from '../../utils/countries'
 import * as yup from "yup"
-import {yupResolver} from "@hookform/resolvers"
-import  { useNavigation } from "react-router-dom"
+import {yupResolver} from "@hookform/resolvers/yup"
+import  { useNavigate } from "react-router-dom"
 import { useUserStore } from '../../store/useUserStore'
+import { useThemeStore } from '../../store/useThemeStore'
+import { motion } from "framer-motion"
+import { useForm } from 'react-hook-form'
+import { FaChevronDown, FaWhatsapp } from 'react-icons/fa';
+import ReactCountryFlag from "react-country-flag";
+
+
 //validation schema 
 
 const loginValidationSchema=yup
 .object()
 .shape({
-  phoneNumber:yup.toString().nullable().notRequired().matches(/^\d+$/,"Phone number must be digit").transform((value,originalValue)=>{
+  phoneNumber:yup.string().nullable().notRequired().matches(/^\d+$/,"Phone number must be digit").transform((value,originalValue)=>
     originalValue.trim()===""?null:value
-  }),
-  email:yup.toString().nullable().notRequired().email("Please enter a valid email").transform((value,originalValue)=>{
+  ),
+  email:yup.string().nullable().notRequired().email("Please enter a valid email").transform((value,originalValue)=>
     originalValue.trim()===""?null:value
-  })
+  )
 })
 .test(
     "at-least-one",
@@ -58,9 +65,14 @@ const Login = () => {
   const [selectedAvatar, setSelectedAvatar] = useState(avatars[0])
   const [profilePictureFile, setProfilePictureFile] = useState(null)
   const [error, setError] = useState("")
-  const navigate= useNavigation()
+  const navigate= useNavigate()
 
   const {setUser}=useUserStore()
+
+  const {theme,setTheme} = useThemeStore()
+
+  const [showDropdown, setShowDropdown] = useState(false)
+  const [searchTerm, setSearchTerm] = useState("")
 
   const {
     register:loginRegister,
@@ -86,11 +98,113 @@ const Login = () => {
   } = useForm({
     resolver:yupResolver(profileValidationSchema)
   })
+
+  const filterCountries=countries.filter(
+    (country)=>
+      country.name.toLowerCase().includes(searchTerm.toLowerCase()) || country.dialCode.includes(searchTerm)
+    
+  )
+
+
+  const ProgressBar=()=>(
+    <div className={`w-full ${theme==="dark" ? "bg-gray-700 " : "bg-gray-200"} rounded-full h-2.5 mb-6`}>
+      <div className='bg-green-500 h-2.5 rounded-full translate-all duration-500 ease-in-out' style={{width:`${(step/3) * 100}%`}}>
+
+      </div>
+
+    </div>
+  )
   
 
   return (
-    <div>
-      Login page
+    
+    <div
+    className={`min-h-screen ${theme==="dark"
+    ? "bg-gray-900 "
+    : "bg-linear-to-br from-green-400 to-blue-500"} flex items-center justify-center p-4 overflow-hidden`}>
+
+    <motion.div
+     initial={{ opacity: 0, y: -50 }}
+     animate={{opacity:1,y:0}}
+     transition={{ duration: 0.5 }}
+     className={`${theme==="dark" ? "bg-gray-800 text-white" : "bg-white "}  max-w-md p-6 md:p-8 rounded-lg shadow-2xl w-full relative z-10`}
+    >
+
+      <motion.div
+     initial={{ scale:0 }}
+     animate={{scale:1}}
+     transition={{ duration: 0.2,type:"spring",stiffness:260,damping:20 }}
+     className={`w-24 h-24 bg-green-500 rounded-full mx-auto mb-6 flex items-center justify-center`}
+    >
+      <FaWhatsapp className='w-16 h-16 text-white'/>
+
+    </motion.div>
+
+    <h1 className={`text-3xl font-bold mb-6 text-center ${theme==="dark" ? "text-white" : "text-gray-800"}`}>
+      ChatApp Login
+    </h1>
+
+    <ProgressBar/>
+
+    {error && <p className='text-red-500 text-center mb-4'>{error}</p>}
+
+    {step===1 && (
+      <form className="space-y-4">
+        <p className={`text-center mb-4 ${theme==="dark" ? "text-gray-300" : "text-gray-600"}`}>
+        </p>
+
+        <div className="relative">
+          <div className="flex">
+            <div className="relative w-1/3">
+              <button type="button" className={`shrink-0 z-10 inline-flex items-center py-2.5 px-4 text-sm font-medium text-center ${theme==="dark" ? "text-white bg-gray-700 border-gray-600" : "text-gray-900 bg-gray-100 border-gray-300"} border rounded-s-lg hover:bg-gray-200 focus:right-4 focus:outline-none focus:ring-gray-100`}
+              onClick={()=> setShowDropdown(true)}>
+                <span >
+                  <ReactCountryFlag countryCode={selectedCountry.alpha2} svg style={{ width: "1.2em", height: "1.2em" }} />
+                        
+                  {" "}{selectedCountry.dialCode}
+                </span>
+
+                <FaChevronDown className='ml-2'/>
+
+              </button>
+
+              {showDropdown && (
+                <div className={`absolute z-10 w-full mt-1 ${theme==="dark" ? "bg-gray-700 border-gray-600" : "bg-white border-gray-300" } border rounded-md shadow-lg max-h-60 overflow-auto`}>
+                  <div className={`sticky top-0 ${theme==="dark" ? "bg-gray-700 " : "bg-white "} p-2 `}>
+                    <input type='text'
+                     placeholder='Search countries...' 
+                     value={searchTerm} 
+                     onChange={(e)=>setSearchTerm(e.target.value)}
+                     className={`w-full px-2 py-1 border ${theme==="dark" ? "text-white bg-gray-600 border-gray-700" : "bg-white border-gray-300"} rounded-md text-sm focus:outline-none focus:right-2 focus:ring-green-500`}
+                     />
+                      {filterCountries.map((country)=>(
+                        <button key={country.alpha2}
+                        type='button'
+                        className={`w-full text-left px-3 py-2 ${theme==="dark" ? "hover:bg-gray-600 " : "hover:bg-gray-100 "} focus:outline-none focus:bg-gray-100`}
+                        onClick={()=>{
+                          setSelectedCountry(country)
+                          setShowDropdown(false)
+                        }}>
+                          <ReactCountryFlag countryCode={country.alpha2} svg style={{ width: "1.2em", height: "1.2em" }} />
+                        {" "}({country.dialCode}) {country.name}
+                        </button>
+                      ))}
+                     
+                  </div>
+                </div>
+              )}
+            </div>
+
+          </div>
+        </div>
+      </form>
+    )}
+    
+
+    </motion.div>
+
+    
+
     </div>
   )
   
