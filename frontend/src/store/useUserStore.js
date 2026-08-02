@@ -15,7 +15,7 @@ const useUserStore=create(
 
         }
         
-    )
+    );
 ) 
 
 export {useUserStore}
