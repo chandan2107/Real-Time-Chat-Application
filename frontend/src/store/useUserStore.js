@@ -15,7 +15,22 @@ const useUserStore=create(
 
         }
         
-    );
+    )
 ) 
 
-export {useUserStore}
+
+const useThemeStore=create(
+    persist((set)=>({
+            theme:"light",
+            setTheme:(theme)=>set({theme})
+    }),
+        {
+            name:"theme-storage",
+            getStorage:()=>localStorage
+
+        }
+        
+    )
+)
+
+export {useUserStore,useThemeStore}
