@@ -8,7 +8,7 @@ import { useUserStore } from '../../store/useUserStore'
 import { useThemeStore } from '../../store/useThemeStore'
 import { motion } from "framer-motion"
 import { useForm } from 'react-hook-form'
-import { FaArrowLeft, FaChevronDown, FaUser, FaWhatsapp } from 'react-icons/fa';
+import { FaArrowLeft, FaChevronDown, FaPlus, FaUser, FaWhatsapp } from 'react-icons/fa';
 import ReactCountryFlag from "react-country-flag";
 import Spinner from '../../utils/Spinner'
 import { sendOtp, updateUserProfile, verifyOtp } from '../../services/user.service'
@@ -39,14 +39,14 @@ const loginValidationSchema=yup
 const otpValidationSchema=yup
 .object()
 .shape({
-  otp:yup.string().length("Otp must be exactly 6 digits").required("Otp is required")
+  otp:yup.string().length(6,"Otp must be exactly 6 digits").required("Otp is required")
 })
 
 const profileValidationSchema=yup
 .object()
 .shape({
   username:yup.string().required("username is required"),
-  agreed:yup.bool().oneOf([true],'You must agree to the terms')
+  agreedToTerms:yup.bool().oneOf([true],'You must agree to the terms')
 })
 
 const avatars = [
@@ -148,10 +148,10 @@ const Login = () => {
       const otpString=otp.join("")
       let response
       if(userPhoneData?.email){
-        response=await verifyOtp(null,null,otpString,userPhoneData.email)
+        response=await verifyOtp(null, null, userPhoneData.email, otpString)
       }
       else{
-        response=await verifyOtp(userPhoneData.phoneNumber,userPhoneData.phoneSuffix,otpString)
+        response=await verifyOtp(userPhoneData.phoneNumber, userPhoneData.phoneSuffix, null, otpString)
       }
 
       if(response.status==="success"){
@@ -164,10 +164,11 @@ const Login = () => {
           resetLoginState()
 
         }
-      }
-      else{
+        else{
         setStep(3)
       }
+      }
+      
     } catch (error) {
       console.log(error)
       setError(error.message || "Failed to verify OTP")
@@ -177,8 +178,8 @@ const Login = () => {
     }
   }
 
-  const handleChange=(e)=>{
-    const file=e.target.file[0]
+  const handleFileChange=(e)=>{
+    const file=e.target.files[0]
     if(file){
       setProfilePictureFile(file)
       setProfilePicture(URL.createObjectURL(file))
@@ -216,7 +217,7 @@ const Login = () => {
     setOtp(newOtp)
     setOtpValue("otp",newOtp.join(""))
     if(value && index <5){
-      document.getElementsById(`otp-${index+1}`).focus()
+      document.getElementById(`otp-${index+1}`).focus()
     }
   }
 
@@ -443,6 +444,128 @@ const Login = () => {
             </button>
           </form>
         )}
+
+        {step===3 && (
+  <form onSubmit={handleProfileSubmit(onProfileSubmit)}
+    className="space-y-4">
+
+    <div className="flex flex-col items-center mb-4">
+
+      <div className="relative w-full flex flex-col items-center mb-4">
+
+        <div className="relative w-24 h-24 mb-2">
+          <img
+            src={profilePicture || selectedAvatar}
+            alt="profile"
+            className="w-24 h-24 rounded-full object-cover"
+          />
+
+          <label
+            htmlFor="profile-picture"
+            className="absolute bottom-0 right-0 bg-green-500 text-white p-2 rounded-full cursor-pointer hover:bg-green-600 transition duration-300"
+          >
+            <FaPlus className="w-4 h-4"/>
+          </label>
+
+          <input
+            type="file"
+            id="profile-picture"
+            accept="image/*"
+            onChange={handleFileChange}
+            className="hidden"
+          />
+        </div>
+
+        <p className={`text-sm ${
+          theme==="dark" ? "text-gray-300" : "text-gray-500"
+        } mb-2`}>
+          Choose an avatar
+        </p>
+
+        <div className="w-full flex flex-row flex-wrap justify-center gap-2">
+          {avatars.map((avatar,index)=>(
+            <img
+              key={index}
+              src={avatar}
+              alt={`Avatar ${index+1}`}
+              className={`w-12 h-12 rounded-full cursor-pointer transition duration-300 ease-in-out transform hover:scale-110 ${
+                selectedAvatar === avatar ? "ring-2 ring-green-500" : ""
+              }`}
+              onClick={()=>setSelectedAvatar(avatar)}
+            />
+          ))}
+        </div>
+
+      </div>
+
+      <div className="relative w-full">
+        <FaUser
+          className={`absolute left-3 top-1/2 transform -translate-y-1/2 ${
+            theme==="dark" ? "text-gray-300" : "text-gray-700"
+          }`}
+        />
+
+        <input
+          type="text"
+          {...profileRegister("username")}
+          placeholder="Username"
+          className={`w-full pl-10 pr-3 py-2 border ${
+            theme==="dark"
+              ? "bg-gray-700 border-gray-600 text-white"
+              : "bg-white border-gray-300 text-gray-900"
+          } rounded-md focus:outline-none focus:ring-2 focus:ring-green-500 text-lg`}
+        />
+
+        {profileErrors.username && (
+          <p className="text-red-500 text-sm mt-1">
+            {profileErrors.username.message}
+          </p>
+        )}
+      </div>
+
+      <div className="flex items-center space-x-2 w-full mt-2">
+        <input
+          type="checkbox"
+          {...profileRegister("agreedToTerms")}
+          className={`rounded mt-0.5 ${
+            theme==="dark"
+              ? "bg-gray-700 text-green-500"
+              : "text-green-500"
+          } focus:ring-green-500`}
+        />
+
+        <label
+          htmlFor="terms"
+          className={`text-sm mb-0.5 ${
+            theme==="dark" ? "text-gray-300" : "text-gray-700"
+          }`}
+        >
+          I agree to the{" "}
+          <a href="#" className="text-red-500 hover:underline">
+            Terms and Conditions
+          </a>
+        </label>
+      </div>
+
+      {profileErrors.agreedToTerms && (
+        <p className="text-red-500 text-sm mt-1">
+          {profileErrors.agreedToTerms.message}
+        </p>
+      )}
+
+      <button
+        type="submit"
+        disabled={!watch("agreedToTerms") || loading}
+        className={`w-full bg-green-500 text-white font-bold py-3 px-4 rounded-md hover:bg-green-600 hover:scale-101 flex items-center justify-center text-lg transition duration-300 ease-in-out transform ${
+          loading ? "opacity-50 cursor-not-allowed" : ""
+        }`}
+      >
+        {loading ? <Spinner /> : "Create Profile"}
+      </button>
+
+    </div>
+  </form>
+)}
       </motion.div>
     </div>
   );

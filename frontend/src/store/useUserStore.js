@@ -7,7 +7,7 @@ const useUserStore=create(
             user:null,
             isAuthenticated:false,
             setUser:(userData)=>set({user:userData,isAuthenticated:true}),
-            clearUser:()=>set({user:null,isAuthenticatedfalse}),
+            clearUser:()=>set({user:null,isAuthenticated:false}),
         }),
         {
             name:"login-storage",
