@@ -4,12 +4,12 @@ import { useThemeStore } from '../../store/useThemeStore'
 import { useChatStore } from '../../store/chatStore'
 import {isToday,isYesterday,format} from "date-fns"
 import whatsappImage from "../../images/whatsapp_image.png"
-import {FaArrowLeft, FaEllipsisV, FaImage, FaLock, FaPaperclip, FaPaperPlane, FaSmile, FaVideo} from "react-icons/fa"
+import {FaArrowLeft, FaEllipsisV, FaFile, FaImage, FaLock, FaPaperclip, FaPaperPlane, FaSmile, FaVideo} from "react-icons/fa"
 import MessageBubble from './MessageBubble'
 import EmojiPicker from "emoji-picker-react"
 
 const isValidate=(date)=>{
-  return date instanceof date & !isNaN(date)
+  return date instanceof Date & !isNaN(date)
 }
 const ChatWindow = ({selectedContact,setSelectedContact}) => {
   const [message, setMessage] = useState("")
@@ -33,6 +33,7 @@ const ChatWindow = ({selectedContact,setSelectedContact}) => {
   fetchMessages,
   fetchConversations,
   conversations,
+  currentConversation,
   isUserTyping,
   startTyping,
   stopTyping,
@@ -115,7 +116,7 @@ const handleSendMessage=async ()=>{
     const status=online ? "delivered":"send"
     formData.append("messageStatus",status)
     if(message.trim()){
-      formData.append("content",message.train())
+      formData.append("content",message.trim())
     }
 
     if(selectedFile){
@@ -262,9 +263,13 @@ const groupedMessages=Array.isArray(messages)? messages.reduce((acc,message)=>{
         {Object.entries(groupedMessages).map(([date, msgs]) => (
           <React.Fragment key={date}>
             {renderDateSeparator(new Date(date))}
-            {msgs.filter(
-              (msg) => msg.conversation === selectedContact?.conversation?._id
-            ).map((msg) => (
+            {msgs.filter((msg) => {
+              const messageConversationId = typeof msg.conversation === "object"
+                ? msg.conversation?._id
+                : msg.conversation
+
+              return String(messageConversationId) === String(currentConversation)
+            }).map((msg) => (
               <MessageBubble
                 key={msg._id || msg.tempId}
                 message={msg}
@@ -335,7 +340,7 @@ const groupedMessages=Array.isArray(messages)? messages.reduce((acc,message)=>{
               <input
                 type="file"
                 ref={fileInputRef}
-                onChange={handleFileChnage}
+                onChange={handleFileChange}
                 accept="image/*,video/*"
                 className="hidden"
               />
@@ -352,7 +357,7 @@ const groupedMessages=Array.isArray(messages)? messages.reduce((acc,message)=>{
                 className={`flex items-center px-4 py-2 w-full transition-colors ${theme === "dark" ? "hover:bg-gray-500" : "hover:bg-gray-100"
                   }`}
               >
-                <FaImage className="mr-2" /> Documents
+                <FaFile className="mr-2" /> Documents
               </button>
             </div>
           )}

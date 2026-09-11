@@ -13,6 +13,7 @@
     "@hookform/resolvers": "^5.4.0",
     "@tailwindcss/vite": "^4.3.2",
     "axios": "^1.18.1",
+    "daisyui": "^5.7.44",
     "date-fns": "^4.4.0",
     "emoji-picker-react": "^4.22.2",
     "framer-motion": "^12.42.2",

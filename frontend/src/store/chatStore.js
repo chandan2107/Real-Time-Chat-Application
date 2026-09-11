@@ -46,7 +46,7 @@ const useChatStore = create((set, get) => ({
     socket.on("reaction_update", ({ messageId, reaction }) => {
       set((state) => ({
         messages: state.messages.map((msg) =>
-          msg._id === messageId ? { ...msg, reactions } : msg,
+          msg._id === messageId ? { ...msg, reaction } : msg,
         ),
       }));
     });
@@ -210,7 +210,8 @@ const useChatStore = create((set, get) => ({
           //replace optimistic message with real one
           set((state) => ({
               messages: state.messages.map((msg) =>
-                  msg._id === tempId ? messageData : msg)
+                msg._id === tempId ? messageData : msg),
+              currentConversation: messageData.conversation?._id || messageData.conversation || state.currentConversation
           }));
           return messageData;
       } catch (error) {
@@ -313,13 +314,26 @@ const useChatStore = create((set, get) => ({
     }
   },
 
+  startTyping: (receiverId) => {
+    const { currentConversation } = get();
+    const socket = getSocket();
+    if (socket && currentConversation && receiverId) {
+      socket.emit("typing_start", {
+        conversationId: currentConversation,
+        receiverId
+      });
+    }
+  }
+
+  ,
+
   stopTyping: (receiverId) => {
     const { currentConversation } = get();
     const socket = getSocket();
     if (socket && currentConversation && receiverId) {
       socket.emit("typing_stop", {
         conversationId: currentConversation,
-        receiverId,
+        receiverId
       });
     }
   },
