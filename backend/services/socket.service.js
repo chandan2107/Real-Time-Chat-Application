@@ -1,6 +1,7 @@
 import {Server} from "socket.io"
 import { User } from "../models/user.model.js"
 import { Message } from "../models/message.model.js"
+import { handleVideoCallEvent } from "./videoCall.service.js"
 
 //map to store online users---userId ,socketId
 
@@ -34,6 +35,7 @@ const initializeSocket=(server)=>{
         socket.on("user_connected",async (connectingUserId)=>{
             try {
                 userId=connectingUserId
+                socket.userId=userId
                 onlineUsers.set(userId,socket.id)
                 socket.join(userId)
 
@@ -215,6 +217,9 @@ const initializeSocket=(server)=>{
                 console.error("Error handling reactions",error)
             }
         })
+
+    //handle vedio call events
+        handleVideoCallEvent(socket,io,onlineUsers)
 
     //handle disconnection and mark user offline
 

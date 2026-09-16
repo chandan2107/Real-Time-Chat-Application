@@ -4,7 +4,7 @@ import { useThemeStore } from '../../store/useThemeStore'
 import { useChatStore } from '../../store/chatStore'
 import {isToday,isYesterday,format} from "date-fns"
 import whatsappImage from "../../images/whatsapp_image.png"
-import {FaArrowLeft, FaEllipsisV, FaFile, FaImage, FaLock, FaPaperclip, FaPaperPlane, FaSmile, FaVideo} from "react-icons/fa"
+import {FaArrowLeft, FaEllipsisV, FaFile, FaImage, FaLock, FaPaperclip, FaPaperPlane, FaSmile, FaTimes, FaVideo} from "react-icons/fa"
 import MessageBubble from './MessageBubble'
 import EmojiPicker from "emoji-picker-react"
 
@@ -98,7 +98,7 @@ const handleFileChange=(e)=>{
   if(file){
     setSelectedFile(file)
     setShowFileMenu(false)
-    if(file.type.startsWith("image/")){
+    if(file.type.startsWith("image/")  || file.type.startsWith("video/")){
       setFilePreview(URL.createObjectURL(file))
     }
   }
@@ -286,11 +286,19 @@ const groupedMessages=Array.isArray(messages)? messages.reduce((acc,message)=>{
 
       {filePreview && (
         <div className="relative p-2">
-          <img
-            src={filePreview}
-            alt="file-preview"
-            className="w-80 object-cover rounded shadow-lg mx-auto"
-          />
+          {selectedFile?.type.startsWith("video/") ? (
+            <video
+              src={filePreview}
+              controls
+              className="w-80 object-cover rounded shadow-lg mx-auto"
+            />
+          ) : (
+            <img
+              src={filePreview}
+              alt="file-preview"
+              className="w-80 object-cover rounded shadow-lg mx-auto"
+            />
+          )}
           <button
             onClick={() => {
               setSelectedFile(null);
