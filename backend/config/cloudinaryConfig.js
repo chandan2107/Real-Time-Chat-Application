@@ -15,25 +15,29 @@ const uploadFileToCloudinary= async (file)=>{
     if (!file) {
         throw new Error("No file provided");
     }
+    const isVideo = file.mimetype.startsWith("video");
     const options={
-        resource_type:file.mimetype.startsWith("video")? "video":"image"
+        resource_type: isVideo ? "video" : "image"
     }
 
     try {
-        const uploader = file.mimetype.startsWith("video")
-            ? cloudinary.uploader.upload_large
-            : cloudinary.uploader.upload;
-
-        const result = await uploader(file.path, options);
-
-        return result;
+        if (isVideo) {
+            const result = await new Promise((resolve, reject) => {
+                cloudinary.uploader.upload_large(file.path, options, (error, result) => {
+                    if (error) return reject(error);
+                    resolve(result);
+                });
+            });
+            return result;
+        } else {
+            const result = await cloudinary.uploader.upload(file.path, options);
+            return result;
+        }
     } finally {
-        
-        fs.unlink(file.path, () => {});
+        if (file.path && fs.existsSync(file.path)) {
+            fs.unlink(file.path, () => {});
+        }
     }
-
-
-    
 }
 
 

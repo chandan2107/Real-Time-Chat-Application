@@ -181,7 +181,7 @@ const groupedMessages=Array.isArray(messages)? messages.reduce((acc,message)=>{
   },{}) : {}
 
   const handleReaction=(messageId,emoji)=>{
-    addReaction(messageId,emoji)
+    addReaction(messageId,emoji,user?._id)
   }
 
   

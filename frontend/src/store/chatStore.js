@@ -1,6 +1,7 @@
 import {create} from "zustand"
 import { axiosInstance } from "../services/url.service"
 import { getSocket } from "../services/chat.service"
+import { useUserStore } from "./useUserStore"
 
 
 const useChatStore = create((set, get) => ({
@@ -23,6 +24,7 @@ const useChatStore = create((set, get) => ({
     socket.off("message_send");
     socket.off("message_error");
     socket.off("message_deleted");
+    socket.off("reaction_update");
 
     //confirm message delivery
     socket.on("message_send", (message) => {
@@ -43,10 +45,10 @@ const useChatStore = create((set, get) => ({
     });
 
     //handle reaction on message
-    socket.on("reaction_update", ({ messageId, reaction }) => {
+    socket.on("reaction_update", ({ messageId, reactions }) => {
       set((state) => ({
         messages: state.messages.map((msg) =>
-          msg._id === messageId ? { ...msg, reaction } : msg,
+          msg._id === messageId ? { ...msg, reactions } : msg,
         ),
       }));
     });
@@ -302,14 +304,38 @@ const useChatStore = create((set, get) => ({
   },
 
   //add reactions or change reactions
-  addReaction: async (messageId, emoji) => {
+  addReaction: async (messageId, emoji, userId) => {
     const socket = getSocket();
-    const { currentUser } = get();
-    if (socket && currentUser) {
+    const currentUserId = userId || useUserStore.getState().user?._id;
+    if (!currentUserId) return;
+
+    // Optimistically update reactions in local state
+    set((state) => ({
+      messages: state.messages.map((msg) => {
+        if (msg._id !== messageId) return msg;
+        const reactions = msg.reactions ? [...msg.reactions] : [];
+        const existingIndex = reactions.findIndex(
+          (r) => (r.user?._id || r.user)?.toString() === currentUserId.toString()
+        );
+
+        if (existingIndex > -1) {
+          if (reactions[existingIndex].emoji === emoji) {
+            reactions.splice(existingIndex, 1);
+          } else {
+            reactions[existingIndex] = { ...reactions[existingIndex], emoji };
+          }
+        } else {
+          reactions.push({ user: currentUserId, emoji });
+        }
+        return { ...msg, reactions };
+      }),
+    }));
+
+    if (socket) {
       socket.emit("add_reaction", {
         messageId,
         emoji,
-        userId: currentUser?._id,
+        userId: currentUserId,
       });
     }
   },

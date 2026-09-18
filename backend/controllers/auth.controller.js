@@ -116,7 +116,7 @@ const verifyOtp = async (req, res) => {
 
 //setup the profile image and username
 const updateProfile = async (req,res)=>{
-    const {username,agreedToTerms,about}=req.body
+    const {username,agreedToTerms,agreed,about}=req.body
     const userId=req.user.userId
     try {
         const user=await User.findById(userId)
@@ -131,7 +131,7 @@ const updateProfile = async (req,res)=>{
         }
 
         if(username){ user.username=username }
-        if(agreedToTerms){ user.agreedToTerms=agreedToTerms}
+        if(agreedToTerms !== undefined || agreed !== undefined){ user.agreedToTerms = agreedToTerms ?? agreed }
         if(about){ user.about = about}
         await user.save()
 

@@ -171,10 +171,8 @@ const initializeSocket=(server)=>{
                 if(!message){
                     return;
                 }
-                const existingIndex=message.reactions.findIndex(
-                    (r)=>{
-                        r.user.toString() === reactionUserId
-                    }
+                const existingIndex = message.reactions.findIndex(
+                    (r) => r.user?.toString() === reactionUserId?.toString()
                 )
 
                 if(existingIndex > -1){
@@ -194,7 +192,7 @@ const initializeSocket=(server)=>{
                 }
                 await message.save()
 
-                const populatedMessage=await Message.findOne(message?._id)
+                const populatedMessage=await Message.findById(message?._id)
                 .populate("sender","username profilePicture")
                 .populate("receiver","username profilePicture")
                 .populate("reactions.user","username")
@@ -204,21 +202,30 @@ const initializeSocket=(server)=>{
                     reactions:populatedMessage.reactions
                 }
 
-                const senderSocket=onlineUsers.get(populatedMessage.sender?._id.toString())
-                const receiverSocket=onlineUsers.get(populatedMessage.receiver?._id.toString())
+                const senderId = populatedMessage.sender?._id?.toString() || populatedMessage.sender?.toString()
+                const receiverId = populatedMessage.receiver?._id?.toString() || populatedMessage.receiver?.toString()
+
+                const senderSocket=onlineUsers.get(senderId)
+                const receiverSocket=onlineUsers.get(receiverId)
 
                 if(senderSocket){
                     io.to(senderSocket).emit("reaction_update",reactionUpdated)
                 }
-                if(receiverSocket){
+                if(receiverSocket && receiverSocket !== senderSocket){
                     io.to(receiverSocket).emit("reaction_update",reactionUpdated)
+                }
+                if(senderId){
+                    io.to(senderId).emit("reaction_update",reactionUpdated)
+                }
+                if(receiverId && receiverId !== senderId){
+                    io.to(receiverId).emit("reaction_update",reactionUpdated)
                 }
             } catch (error) {
                 console.error("Error handling reactions",error)
             }
         })
 
-    //handle vedio call events
+    //handle video call events
         handleVideoCallEvent(socket,io,onlineUsers)
 
     //handle disconnection and mark user offline

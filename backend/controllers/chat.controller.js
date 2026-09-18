@@ -61,15 +61,14 @@ const sendMessage=async (req,res)=>{
             messageStatus
         })
         await message.save()
-        if(message?.content){
-            conversation.lastMessage=message?._id
-        }
+        conversation.lastMessage=message?._id
         conversation.unreadCount+=1
         await conversation.save()
 
-        const populatedMessage=await Message.findOne(message?._id)
+        const populatedMessage=await Message.findById(message?._id)
         .populate("sender","username profilePicture")
         .populate("receiver","username profilePicture")
+        .populate("reactions.user","username")
 
         //socket event for real time chat
         if(req.io && req.socketUserMap){
@@ -133,6 +132,7 @@ const getMessages=async (req,res)=>{
         const messages=await Message.find({conversation:conversationId})
         .populate("sender","username profilePicture")
         .populate("receiver","username profilePicture")
+        .populate("reactions.user","username")
         .sort("createdAt")
 
         await Message.updateMany(

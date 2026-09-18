@@ -191,7 +191,7 @@ const Login = () => {
       setLoading(true)
       const formData=new FormData()
       formData.append("username",data.username)
-      formData.append("agreed",data.agreedToTerms)
+      formData.append("agreedToTerms",data.agreedToTerms)
       if(profilePictureFile){
         formData.append("media",profilePictureFile)
       }

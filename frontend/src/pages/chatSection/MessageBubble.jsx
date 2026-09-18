@@ -164,16 +164,18 @@ if(message===0) return
 
         {message.reactions && message.reactions.length > 0 && (
           <div
-            className={`absolute -bottom-5 ${isUserMessage ? "right-2" : "left-2"} ${theme === 'dark' ? "bg-[#2a3942]" : "bg-gray-200"} rounded-full px-2 shadow-md`}>
+            className={`absolute -bottom-3 ${isUserMessage ? "right-2" : "left-2"} ${
+              theme === 'dark' ? "bg-[#2a3942] border border-[#1f2c34]" : "bg-white border border-gray-200"
+            } rounded-full px-2 py-0.5 shadow-md flex items-center z-10 text-xs`}>
               {
                 message.reactions.map((reaction, index) => (
-                  <span key={index} className="mr-1">
+                  <span key={index} className="inline-block">
                     {reaction.emoji}
                   </span>
                 ))
               }
-  </div>
-)}
+          </div>
+        )}
 
       {showOptions && (
         <div ref={optionRef} className={`absolute top-8 right-1 z-50 w-36 rounded-xl shadow-lg py-2 text-sm ${theme=="dark"?"bg-[#1d1f1f] text-white" : "bg-gray-100 text-black"}`}>

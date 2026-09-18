@@ -48,7 +48,7 @@ const createStatus=async (req,res)=>{
         })
         await status.save()
 
-        const populatedStatus=await Status.findOne(status?._id)
+        const populatedStatus=await Status.findById(status?._id)
         .populate("user","username profilePicture")
         .populate("viewers","username profilePicture")
 

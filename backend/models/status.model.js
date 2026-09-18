@@ -14,7 +14,7 @@ const statusSchema = new mongoose.Schema({
     },
     contentType:{
         type:String,
-        enum:["image","vedio","text"],
+        enum:["image","video","text"],
         default:"text"
     },
     viewers:[{

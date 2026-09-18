@@ -19,12 +19,14 @@ const messageSchema = new mongoose.Schema({
         required:true
     },
     content:{type:String},
-    imageOrVedioUrl:{type:String},
-    contentType:{type:String,enum:["image","vedio","text"]},
+    imageOrVideoUrl:{type:String},
+    contentType:{type:String,enum:["image","video","text"]},
     reactions:[
         {
-            type:mongoose.Schema.Types.ObjectId,
-            ref:"User",
+            user:{
+                type:mongoose.Schema.Types.ObjectId,
+                ref:"User"
+            },
             emoji:String
         }
     ],
