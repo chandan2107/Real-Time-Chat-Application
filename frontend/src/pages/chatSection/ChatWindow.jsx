@@ -7,6 +7,8 @@ import whatsappImage from "../../images/whatsapp_image.png"
 import {FaArrowLeft, FaEllipsisV, FaFile, FaImage, FaLock, FaPaperclip, FaPaperPlane, FaSmile, FaTimes, FaVideo} from "react-icons/fa"
 import MessageBubble from './MessageBubble'
 import EmojiPicker from "emoji-picker-react"
+import VideoCallManager from '../VideoCall/VideoCallManager'
+import { getSocket } from '../../services/chat.service'
 
 const isValidate=(date)=>{
   return date instanceof Date & !isNaN(date)
@@ -23,6 +25,7 @@ const ChatWindow = ({selectedContact,setSelectedContact}) => {
   const fileInputRef = useRef(null)
   const {theme}=useThemeStore()
   const {user}=useUserStore()
+  const {socket}=getSocket()
 
 
   const {
@@ -184,6 +187,23 @@ const groupedMessages=Array.isArray(messages)? messages.reduce((acc,message)=>{
     addReaction(messageId,emoji,user?._id)
   }
 
+  const handleVideoCall = () => {
+  if(selectedContact && online) {
+    const { initiateCall } = useVideoCallStore.getState();
+
+    const avartar = selectedContact?.profilePicture;
+
+    initiateCall (
+      selectedContact?._id,
+      selectedContact?.username,
+      avartar,
+      "video"
+    )
+  }else{
+    alert("User is offline. Cannot initiate the call")
+  }
+}
+
   
 
   if (!selectedContact) {
@@ -213,6 +233,7 @@ const groupedMessages=Array.isArray(messages)? messages.reduce((acc,message)=>{
 
 
   return (
+    <>
     <div className="flex-1 h-screen w-full flex flex-col">
       <div className={`p-4 ${theme === 'dark' ? 'bg-[#303430] text-white' : 'bg-[rgb(239,242,245)] text-gray-600'} flex items-center`}>
         <button className="mr-2 focus:outline-none"
@@ -249,8 +270,8 @@ const groupedMessages=Array.isArray(messages)? messages.reduce((acc,message)=>{
         </div>
 
         <div className="flex items-center space-x-4">
-          <button className="focus:outline-none">
-            <FaVideo className="h-5 w-5" />
+          <button className="focus:outline-none" onClick={handleVideoCall} title={online ? "Start video call" : "User is Offline"}>
+            <FaVideo className="h-5 w-5 text-green-500 hover:text-green-600" />
           </button>
           <button className="focus:outline-none">
             <FaEllipsisV className="h-5 w-5" />
@@ -396,6 +417,8 @@ const groupedMessages=Array.isArray(messages)? messages.reduce((acc,message)=>{
 
     </div>
     </div>
+    <VideoCallManager socket={socket}/>
+    </>
   )
 }
 
