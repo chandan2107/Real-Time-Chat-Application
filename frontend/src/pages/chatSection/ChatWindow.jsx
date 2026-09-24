@@ -9,6 +9,7 @@ import MessageBubble from './MessageBubble'
 import EmojiPicker from "emoji-picker-react"
 import VideoCallManager from '../VideoCall/VideoCallManager'
 import { getSocket } from '../../services/chat.service'
+import { useVideoCallStore } from '../../store/vedioCallStore'
 
 const isValidate=(date)=>{
   return date instanceof Date & !isNaN(date)
@@ -25,7 +26,7 @@ const ChatWindow = ({selectedContact,setSelectedContact}) => {
   const fileInputRef = useRef(null)
   const {theme}=useThemeStore()
   const {user}=useUserStore()
-  const {socket}=getSocket()
+  const socket=getSocket()
 
 
   const {

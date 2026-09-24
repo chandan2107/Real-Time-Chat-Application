@@ -264,7 +264,7 @@ const useChatStore = create((set, get) => ({
     if (unreadIds.length === 0) return;
 
     try {
-      const { data } = await axiosInstance.put("/chats/message/read", {
+      const { data } = await axiosInstance.put("/chats/messages/read", {
         messageIds: unreadIds,
       });
 

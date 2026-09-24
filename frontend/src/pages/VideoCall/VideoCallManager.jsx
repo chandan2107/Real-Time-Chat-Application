@@ -1,95 +1,121 @@
-
-import React, { useEffect } from 'react'
+import React, { useCallback, useEffect } from 'react';
 import { useUserStore } from '../../store/useUserStore';
 import { useVideoCallStore } from '../../store/vedioCallStore';
 import VideoCallModal from './VideoCallModal';
+
 const VideoCallManager = ({ socket }) => {
-    const { setIncomingCall, setCurrentCall, setCallType, setCallModalOpen, endCall, setCallStatus } = useVideoCallStore();
+  const {
+    setIncomingCall,
+    setCurrentCall,
+    setCallType,
+    setCallModalOpen,
+    endCall,
+    setCallStatus,
+  } = useVideoCallStore();
 
-    const { user } = useUserStore();
+  const { user } = useUserStore();
 
-    useEffect(() => {
-        if (!socket) return;
+  // Handle incoming calls and call failures
+  useEffect(() => {
+    if (!socket) return;
 
-        //Handle incoming call
-        const handleIncomingCall = ((callerId, callerName, callerAvatar, callType, callId) => {
-            setIncomingCall({
-                callerId,
-                callerName,
-                callerAvatar,
-                callId
-            })
+    const handleIncomingCall = ({
+      callerId,
+      callerName,
+      callerAvatar,
+      callType,
+      callId,
+    }) => {
+      setIncomingCall({
+        callerId,
+        callerName,
+        callerAvatar,
+        callId,
+      });
 
-            setCallType(callType)
-            setCallModalOpen(true)
-            setCallStatus("ringing")
+      setCallType(callType);
+      setCallModalOpen(true);
+      setCallStatus('ringing');
+    };
 
-            //Handle incoming call
-            const handleIncomingCall = ({ callerId, callerName, callerAvatar, callType, callId }) => {
-                setIncomingCall({
-                    callerId,
-                    callerName,
-                    callerAvatar,
-                    callId
-                })
+    const handleCallEnded = () => {
+      setCallStatus('failed');
 
-                setCallType(callType)
-                setCallModalOpen(true)
-                setCallStatus("ringing")
-            }
+      setTimeout(() => {
+        endCall();
+      }, 2000);
+    };
 
-            const handleCallEnded = ({ reason }) => {
-                setCallStatus("failed")
-                setTimeout(() => {
-                    endCall();
-                }, 2000)
-            }
+    socket.on('incoming_call', handleIncomingCall);
+    socket.on('call_failed', handleCallEnded);
 
-            socket.on("incoming_call", handleIncomingCall)
-            socket.on("call_failed", handleCallEnded)
-            return () => {
-                socket.off("incoming_call", handleIncomingCall)
-                socket.off("call_failed", handleCallEnded)
-            }
-        }, [socket, setIncomingCall, setCallType, setCallModalOpen, setCallStatus, endCall])
+    return () => {
+      socket.off('incoming_call', handleIncomingCall);
+      socket.off('call_failed', handleCallEnded);
+    };
+  }, [
+    socket,
+    setIncomingCall,
+    setCallType,
+    setCallModalOpen,
+    setCallStatus,
+    endCall,
+  ]);
 
+  // Initiate a call
+  const initiateCall = useCallback(
+    (receiverId, receiverName, receiverAvatar, callType = 'video') => {
+      if (!socket || !user?._id) return;
 
-        //Memoized function to initial call
-        const initiateCall = useCallback((receiverId, receiverName, receiverAvatar, callType = "video") => {
-            const callId = `${user?._id}-${receiverId}-${Date.now()}`;
+      const callId = `${user._id}-${receiverId}-${Date.now()}`;
 
-            const callData = {
-                callId,
-                participantId: receiverId,
-                participantName: receiverName,
-                participantAvatar: receiverAvatar
-            }
+      const callData = {
+        callId,
+        participantId: receiverId,
+        participantName: receiverName,
+        participantAvatar: receiverAvatar,
+      };
 
-            setCurrentCall(callData)
-            setCallType(callType)
-            setCallModalOpen(true)
-            setCallStatus("calling")
+      setCurrentCall(callData);
+      setCallType(callType);
+      setCallModalOpen(true);
+      setCallStatus('calling');
 
-            //Emit the call initiate
-            socket.emit("initiate_call", {
-                callerId: user?._id,
-                receiverId,
-                callType,
-                callerInfo: {
-                    username: user.username,
-                    profilePicture: user.profilePicture
-                }
-            })
-        }, [
-            user, socket, setCurrentCall, setCallType, setCallModalOpen, setCallStatus
-        ])
+      socket.emit('initiate_call', {
+        callId,
+        callerId: user._id,
+        receiverId,
+        callType,
+        callerInfo: {
+          username: user.username,
+          profilePicture: user.profilePicture,
+        },
+      });
+    },
+    [
+      user,
+      socket,
+      setCurrentCall,
+      setCallType,
+      setCallModalOpen,
+      setCallStatus,
+    ]
+  );
 
-        //expose the initiate call function to store
-        useEffect(() => {
-            useVideoCallStore.getState().initiateCall = initiateCall
-        }, [initiateCall])
+  // Expose the initiateCall function through the store
+  useEffect(() => {
+    useVideoCallStore.getState().initiateCall = initiateCall;
 
-        return <VideoCallModal socket={socket} />;
-    })
-}
-    export default VideoCallManager
+    return () => {
+      if (
+        useVideoCallStore.getState().initiateCall === initiateCall
+      ) {
+        useVideoCallStore.getState().initiateCall = null;
+      }
+    };
+  }, [initiateCall]);
+
+  return <VideoCallModal socket={socket} />;
+};
+
+export default VideoCallManager;
