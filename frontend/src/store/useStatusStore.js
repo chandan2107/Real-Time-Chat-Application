@@ -23,7 +23,7 @@ const useStatusStore = create((set, get) => ({
         
         
       }))
-    }),
+    });
 
     
     socket.on("status_deleted", (statusId) => {
