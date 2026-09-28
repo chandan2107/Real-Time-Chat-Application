@@ -2,14 +2,13 @@ import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { FaPlus, FaCamera, FaEllipsisH, FaMobileAlt, FaTimes } from "react-icons/fa";
 import { RxCross2 } from "react-icons/rx";
-import Layout from "../components/Layout";
 import StatusPreview from "./StatusPreview";
 import StatusList from "./StatusList";
-import useThemeStore from "../store/useThemeStore";
-import useUserStore from "../store/useUserStore";
-import useStatusStore from "../store/useStatusStore";
-import { formatTimeAgo } from "../utils/formatTime";
+import {useUserStore} from "../../store/useUserStore";
+import useStatusStore from "../../store/useStatusStore";
 import formatTimestamp from "../../utils/formatTime";
+import Layout from "../../components/Layout";
+import { useThemeStore } from "../../store/useThemeStore";
 
 const Status = () => {
 

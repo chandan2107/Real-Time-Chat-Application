@@ -1,6 +1,6 @@
 import {create} from "zustand";
-import axiosInstance from "../service/urlService";
-import {getSocket} from "../service/socketService";
+import { axiosInstance } from "../services/url.service";
+import { getSocket } from "../services/chat.service";
 
 const useStatusStore = create((set, get) => ({
   
@@ -86,6 +86,7 @@ const useStatusStore = create((set, get) => ({
           statuses: state.statuses.some((s) => s._id === data.data._id)?
           state.statuses: [data.data, ...state.statuses] 
         }));
+        console.log("Updated statuses:", get().statuses);
       }
 
       
@@ -93,7 +94,10 @@ const useStatusStore = create((set, get) => ({
       console.error("Error creating status", error);
       set({ error: error.message, loading: false });
       throw error;
-    }
+    } finally {
+    // Always stop the loader after success or failure
+    set({ loading: false });
+  }
   },
 
   // Mark status as viewed
@@ -147,7 +151,7 @@ const useStatusStore = create((set, get) => ({
   getGroupedStatus: () => {
     const {statuses} = get();
     return statuses.reduce((acc, status) => {
-      const statusUserId = status.user?.id;
+      const statusUserId = status.user?._id;
       if (!acc[statusUserId]) {
         acc[statusUserId] = {
           id: statusUserId,
@@ -175,9 +179,9 @@ const useStatusStore = create((set, get) => ({
 
   
   getOtherStatuses: (userId) => {
-    const groupedStatuses = get().getGroupedStatus();
+    const groupedStatus = get().getGroupedStatus();
     return Object.values(groupedStatus).filter(
-      (contact) => contact._id !== userId
+      (contact) => contact.id !== userId
     );
   },
 
