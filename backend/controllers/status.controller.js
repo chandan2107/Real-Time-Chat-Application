@@ -122,7 +122,7 @@ const viewStatus=async (req,res)=>{
                         viewers:updateStatus.viewers
                     }
                     
-                    res.io.to(statusOwnerSocketId).emit("status_viewed",viewData)
+                    req.io.to(statusOwnerSocketId).emit("status_viewed",viewData)
                 }
                 else{
                     console.log("Status owner not connected")

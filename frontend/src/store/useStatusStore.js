@@ -32,7 +32,7 @@ const useStatusStore = create((set, get) => ({
       }));
     });
 
-    socket.on("status_viewed", ( statusId, viewers ) => {
+    socket.on("status_viewed", ({ statusId, viewers }) => {
       set((state) => ({
         statuses: state.statuses.map((status) =>
           status._id === statusId ? { ...status, viewers } : status
@@ -102,17 +102,21 @@ const useStatusStore = create((set, get) => ({
 
   // Mark status as viewed
   viewStatus: async (statusId) => {
+    
+
     try {
+      set({ loading: true, error: null });
       await axiosInstance.put(`/status/${statusId}/view`);
       
         set((state) => ({
           statuses: state.statuses.map((status) =>
             status._id === statusId ? {...status} : status
-          )
+          ),
+          loading: false
         }));
       
     } catch (error) {
-      set({ error: error.message });
+      set({ error: error.message,loading:false });
     }
   },
 
@@ -161,7 +165,7 @@ const useStatusStore = create((set, get) => ({
         };
       }
       acc[statusUserId].statuses.push({
-        id: status.id,
+        id: status._id,
         media: status.content,
         contentType: status.contentType,
         timestamp: status.createdAt,

@@ -267,7 +267,7 @@ const Status = () => {
                   }`}
               >
                 {userStatuses ?
-                  `${userStatuses.statuses.length} status ${userStatuses.statuses.length > 1 ? "es" : ""
+                  `${userStatuses.statuses.length} status ${userStatuses.statuses.length > 1 ? " . " : ""
                   }  ${formatTimestamp(
                     userStatuses.statuses[userStatuses.statuses.length - 1]
                       .timestamp
