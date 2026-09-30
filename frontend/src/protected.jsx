@@ -16,17 +16,26 @@ export const ProtectedRoute=()=>{
 
     useEffect(()=>{
         const verifyAuth=async ()=>{
+            const token=localStorage.getItem("auth_token")
+            if(!token){
+                clearUser()
+                setIsChecking(false)
+                return
+            }
+
             try {
                 const result=await checkUserAuth()
-                if(result?.isAuthenticated){
+                if(result?.isAuthenticated && result?.user){
                     setUser(result.user)
                 }
                 else{
                     clearUser()
+                    localStorage.removeItem("auth_token")
                 }
             } catch (error) {
                 console.error(error)
                 clearUser()
+                localStorage.removeItem("auth_token")
             }
             finally{
                 setIsChecking(false)

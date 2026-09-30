@@ -2,6 +2,7 @@ import {Server} from "socket.io"
 import { User } from "../models/user.model.js"
 import { Message } from "../models/message.model.js"
 import { handleVideoCallEvent } from "./videoCall.service.js"
+import { socketMiddleware } from "../middleware/socket.middleware.js"
 
 //map to store online users---userId ,socketId
 
@@ -21,6 +22,8 @@ const initializeSocket=(server)=>{
         pingTimeout:60000 //disconnect after 60 secs if inactive
 
     });
+
+    io.use(socketMiddleware)
 
 
 

@@ -21,8 +21,17 @@ const isUserMessage = message.sender._id === currentUser?._id;
 
 const bubbleClass=isUserMessage ? `chat-end` :`chat-start`
 
-const bubbleContentClass = isUserMessage ? `chat-bubble md:max-w-[50%] min-w-[130px] ${theme === 'dark' ? "bg-[#144d3b] text-white":"bg-[#d9fdd3] text-black"}`:
-`chat-bubble md:max-w-[50%] min-w-[130px] ${theme === 'dark' ? "bg-[#144d3b] text-white":"bg-[#d9fdd3] text-black"}` 
+const bubbleContentClass = isUserMessage
+  ? `chat-bubble md:max-w-[50%] !py-1 !px-3  rounded-lg rounded-tr-none ${
+      theme === "dark"
+        ? "bg-[#005c4b] text-[#e9edef]"
+        : "bg-[#d9fdd3] text-[#111b21]"
+    }`
+  : `chat-bubble md:max-w-[50%] !py-1 !px-3 rounded-lg rounded-bl-none ${
+      theme === "dark"
+        ? "bg-[#202c33] text-[#e9edef]"
+        : "bg-[#ffffff] text-[#111b21]"
+    }`;
 
 const handleReact=(emoji)=>{
   onReact(message._id,emoji)
@@ -45,10 +54,10 @@ if(message===0) return
 
   return (
     <div className={`chat ${bubbleClass}`}>
-  <div className={`${bubbleContentClass} relative group`}
+  <div className={`${bubbleContentClass}  relative group`}
     ref={messageRef}>
 
-    <div className="flex justify-center gap-2">
+    <div className="flex gap-2">
       {message.contentType === 'text' && <p className="mr-2">{message.content}</p>}
       {
         message.contentType === 'image' &&

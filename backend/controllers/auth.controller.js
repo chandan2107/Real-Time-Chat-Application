@@ -180,7 +180,7 @@ const getAllUsers = async (req,res)=>{
                 $ne:loggedInUser
             }
         }).select(
-            "username profilePicture lastSeen isOnline about phoneNumber phoneSuffix"
+            "username profilePicture lastSeen isOnline about phoneNumber phoneSuffix email"
         ).lean()
         
         const usersWithConversation=await Promise.all(

@@ -30,7 +30,7 @@ const HomePage = () => {
       animate={{opacity:1}}
       transition={{duration:0.5}}
       className='h-full'>
-        <ChatList contacts={allUsers} />
+        <ChatList contacts={allUsers} onRefreshContacts={loadAllUsers} />
       </motion.div>
     </Layout>
   )
